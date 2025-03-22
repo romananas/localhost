@@ -1,0 +1,15 @@
+# Config exemple
+
+folder = "~/.cache/localhost/"
+
+[servers]
+entry_point = "index.html"
+aliases = {"404.html" = "/404","index.html" = "/"}
+
+[servers.0]
+address = "127.0.0.1"
+ports = [8080,8081]
+
+[servers.1]
+address = "127.0.0.2"
+ports = [8082,8083]
