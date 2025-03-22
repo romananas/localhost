@@ -10,6 +10,9 @@ use clap::Parser;
 
 mod connection;
 mod ip;
+
+mod config;
+
 use ip::IPv4;
 
 const DEFAULT_IP: &str = "127.0.0.1:8080";
