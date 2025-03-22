@@ -1,0 +1,11 @@
+[package]
+name = "localhost"
+authors = ["Romann BELMER"]
+description = "An NGINX like server for learning purposes"
+license-file = "LICENSE.md"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+clap = { version = "4.5.32", features = ["derive"] }
+libc = "0.2.171"
