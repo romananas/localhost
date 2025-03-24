@@ -144,6 +144,8 @@ version = "0.1.0"
 dependencies = [
  "clap",
  "libc",
+ "serde",
+ "serde_derive",
  "toml",
 ]
 
