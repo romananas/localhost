@@ -8,7 +8,7 @@ pub struct IPv4 {
     c: u8,
     d: u8,
 
-    port: u32,
+    pub port: u32,
 }
 
 impl IPv4 {

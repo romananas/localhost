@@ -6,32 +6,15 @@ use std::os::fd::{AsRawFd, RawFd};
 // use std::time::Duration;
 
 use libc::{epoll_create1, epoll_ctl, epoll_wait, epoll_event, EPOLLIN, EPOLL_CTL_ADD};
-use clap::Parser;
 
 mod connection;
 mod ip;
+mod args;
+mod options;
 
 mod config;
 
 use ip::IPv4;
-
-const DEFAULT_IP: &str = "127.0.0.1:8080";
-
-#[derive(Parser, Debug)]
-#[command(version, about, long_about = None)]
-struct Args {
-    /// Define one or more ip addresses and port formatted as 127.0.0.1:8080
-    #[arg(short, long = "addr", alias = "addresses", value_parser, num_args = 1.., value_delimiter = ' ', default_values = &[DEFAULT_IP])]
-    addr: Vec<String>,
-
-    /// Directory path of the server
-    #[arg(short, long, default_value_t = String::from("."))]
-    path: String,
-
-    /// Server entry point filename
-    #[arg(short = 'i', long = "index", default_value_t = String::from("index.html"))]
-    entry_point: String,
-}
 
 // fn set_nonblocking(fd: RawFd) {
 //     unsafe {
@@ -40,9 +23,12 @@ struct Args {
 //     }
 // }
 
+
 fn main() {
     // Parse the command line arguments
-    let args = Args::parse();
+    let args = args::parse();
+
+    dbg!("{}",args.config.clone());
 
     // Collect all the IP addresses and ports to bind to
     let addrs = args.addr.iter().map(|f| {

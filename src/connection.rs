@@ -7,7 +7,7 @@ pub fn handle(mut stream: TcpStream) {
     let request_line = buf_reader.lines().next().unwrap().unwrap();
 
     // Extraction du chemin de l'URL
-    let path = request_line.split_whitespace().nth(1).unwrap_or("/pages/");
+    let path = request_line.split_whitespace().nth(1).unwrap_or("/");
     
     // Associer les chemins aux fichiers HTML
     let filename = match path {
