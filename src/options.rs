@@ -6,13 +6,13 @@ use super::ip::IPv4;
 
 use std::collections::HashMap;
 
+#[derive(Debug,Clone)]
 pub struct Opts {
-    path: String,
-
-    index: String,
-    links: Option<HashMap<String, String>>,
-
-    instances: HashMap<String,Vec<u32>>
+    pub path: String,
+    pub index: String,
+    pub not_found: String,
+    pub links: HashMap<String, String>,
+    pub instances: HashMap<String,Vec<u32>>
 }
 
 impl Opts {
@@ -25,18 +25,18 @@ impl Opts {
                 None => { instances.insert(ip.addr(), vec![ip.port]); }
             }
         }
-        let mut links: HashMap<String, String> = HashMap::new();
-        let links = match a.aliases {
-            Some(al) => {
-                for alias in al {
-                    let tmp = alias.split(":").collect::<Vec<&str>>();
-                    links.insert(tmp[0].to_string(), tmp[1].to_string());
-                }
-                Some(links)
-            }
-            None => None,
-        };
-        Self { path: a.path, index: a.entry_point, links: links, instances: instances }
+        let links: HashMap<String, String> = HashMap::new();
+        // let links = match a.links {
+        //     Some(al) => {
+        //         for alias in al {
+        //             let tmp = alias.split(":").collect::<Vec<&str>>();
+        //             links.insert(tmp[0].to_string(), tmp[1].to_string());
+        //         }
+        //         links
+        //     }
+        //     None => HashMap::new(),
+        // };
+        Self { path: a.path, index: a.entry_point, not_found: a.not_found ,links: links, instances: instances }
     }
 
     pub fn from_config(c: Config) -> Self {
@@ -44,6 +44,16 @@ impl Opts {
         for s in c.servers.instance {
             instances.insert(s.address, s.ports);
         }
-        Self { path: c.path, index: c.servers.entry_point, links: c.servers.aliases, instances: instances }
+        Self { path: c.path, index: c.servers.index, links: HashMap::new(), not_found: c.servers.not_found, instances: instances }
+    }
+
+    /// Generate every addresses/port combinations for every instances
+    /// 
+    /// Result = addr:port
+    pub fn address_combinations(&self) -> Vec<String> {
+        let instances = self.instances.clone();
+        instances.iter().flat_map(|(addr,ports)| {
+            ports.iter().map(|p| {format!("{}:{}",addr,p)}).collect::<Vec<String>>()
+        }).collect::<Vec<String>>()
     }
 }

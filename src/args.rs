@@ -17,11 +17,15 @@ pub struct Args {
     #[arg(short = 'i', long = "index", default_value_t = String::from("index.html"))]
     pub entry_point: String,
 
-    /// Defines new path for files, exemple: hello.html:hello
-    #[arg(short,long,value_parser, num_args = 1..)]
-    pub aliases: Option<Vec<String>>,
+    /// Server not found file
+    #[arg(long = "404", default_value_t = String::from("404.html"))]
+    pub not_found: String,
+    
+    // /// Defines new path for files, exemple: hello.html:hello
+    // #[arg(short,long,value_parser, num_args = 1..)]
+    // pub links: Option<Vec<String>>,
 
-    /// Config file path
+    /// Config file path, icompatible with all other options
     #[arg(short, long)]
     pub config: Option<String>,
 }
