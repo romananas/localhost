@@ -1,0 +1,15 @@
+# Config exemple
+
+path = "./pages/"
+
+[servers]
+index = "index.html"
+not_found = "404.html"
+
+[[servers.instance]]
+address = "127.0.0.1"
+ports = [8080,8081,8082]
+
+[[servers.instance]]
+address = "127.0.0.2"
+ports = [8082,8083]
