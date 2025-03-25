@@ -1,14 +1,14 @@
 # Config exemple
 
-path = "~/.cache/localhost/"
+path = "./pages/"
 
 [servers]
-entry_point = "index.html"
-aliases = {"404.html" = "/404","index.html" = "/"}
+index = "index.html"
+not_found = "404.html"
 
 [[servers.instance]]
 address = "127.0.0.1"
-ports = [8080,8081]
+ports = [8080,8081,8082]
 
 [[servers.instance]]
 address = "127.0.0.2"
