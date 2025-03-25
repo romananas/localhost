@@ -1,3 +1,5 @@
+#![allow(dead_code)]
+
 const BAD_FORMAT: &str = "bad format must be formated like 255.255.255.255:8989";
 const BAD_VALUE: &str = "all values must be formated has u8.u8.u8.u8.u32";
 
