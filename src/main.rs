@@ -38,9 +38,15 @@ fn options() -> options::Opts {
 
 fn main() {
     let mut opts = options();
-    std::env::set_current_dir(opts.path.clone()).unwrap();
+    match std::env::set_current_dir(opts.path.clone()) {
+        Ok(_) => (), 
+        Err(e) => {
+            println!("{}",e);
+            return;
+        },
+    }
 
-    println!("Répertoire actuel: {:?}", std::env::current_dir().unwrap());
+    // println!("Répertoire actuel: {:?}", std::env::current_dir().unwrap());
     let addrs = opts.clone().address_combinations();
 
     // let mut links = HashMap::new();
