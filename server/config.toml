@@ -7,8 +7,6 @@ index = "index.html"
 not_found = "404.html"
 aliases = {"hello.html" = "/js/"}
 
-# local host
-
 [[servers.instance]]
 address = "127.0.0.1"
 ports = [8080,8081,8082]
