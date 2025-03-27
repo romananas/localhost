@@ -21,9 +21,9 @@ pub struct Args {
     #[arg(long = "404", default_value_t = String::from("404.html"))]
     pub not_found: String,
     
-    // /// Defines new path for files, exemple: hello.html:hello
-    // #[arg(short,long,value_parser, num_args = 1..)]
-    // pub links: Option<Vec<String>>,
+    /// Defines new path for files, exemple: hello.html:hello
+    #[arg(short,long,value_parser, num_args = 1..)]
+    pub links: Option<Vec<String>>,
 
     /// Config file path, icompatible with all other options
     #[arg(short, long)]
