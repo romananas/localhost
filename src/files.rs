@@ -4,7 +4,7 @@ use std::path::Path;
 pub fn parse_dir(dir: &str) -> Vec<String> {
     let mut list = Vec::new();
     visit_dirs(Path::new(dir), &mut list);
-    dbg!("{}",list.clone());
+    // dbg!("{}",list.clone());
     list
 }
 

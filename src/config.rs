@@ -1,6 +1,7 @@
 #![allow(dead_code)]
 
 use serde_derive::Deserialize;
+use toml::{map::Map, Value};
 
 #[derive(Deserialize, Debug)]
 pub struct Config {
@@ -13,6 +14,7 @@ pub struct ServerConfig {
     pub index: String,
     pub not_found: String,
     pub instance: Vec<Server>, // On stocke les serveurs dans un Vec
+    pub aliases: Option<Map<String,Value>>
 }
 
 #[derive(Deserialize, Debug)]

@@ -49,7 +49,11 @@ fn main() {
         .iter()
         .filter_map(|fp| fp.strip_prefix(".").map(|s| s.to_string()))
         .collect();
+    let files_paths = files_paths.iter().map(|f| f.strip_prefix("./").unwrap_or(f).to_string()).collect::<Vec<String>>();
     for (path,file_path) in paths.iter().zip(files_paths) {
+        if opts.links.values().any(|v| v.contains(&file_path)) {
+            continue;
+        }
         if file_path.contains(opts.index.as_str()) {
             opts.links.insert("/".to_string(), file_path);
             continue;

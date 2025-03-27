@@ -44,7 +44,20 @@ impl Opts {
         for s in c.servers.instance {
             instances.insert(s.address, s.ports);
         }
-        Self { path: c.path, index: c.servers.index, links: HashMap::new(), not_found: c.servers.not_found, instances: instances }
+        // println!("x = {}",c.servers.aliases);
+        let aliases = match c.servers.aliases.clone() {
+            Some(v) => v,
+            None => toml::map::Map::new(),
+        };
+        let mut links: HashMap<String,String> = HashMap::new();
+        for (file,path) in aliases {
+            let path = match path.as_str() {
+                Some(v) => v.to_string(),
+                None => panic!("aliases must be a string therefore {} is not",path),
+            };
+            links.insert(path,file );
+        }
+        Self { path: c.path, index: c.servers.index, links: links, not_found: c.servers.not_found, instances: instances }
     }
 
     /// Generate every addresses/port combinations for every instances
