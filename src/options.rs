@@ -25,17 +25,17 @@ impl Opts {
                 None => { instances.insert(ip.addr(), vec![ip.port]); }
             }
         }
-        let links: HashMap<String, String> = HashMap::new();
-        // let links = match a.links {
-        //     Some(al) => {
-        //         for alias in al {
-        //             let tmp = alias.split(":").collect::<Vec<&str>>();
-        //             links.insert(tmp[0].to_string(), tmp[1].to_string());
-        //         }
-        //         links
-        //     }
-        //     None => HashMap::new(),
-        // };
+        let mut links: HashMap<String, String> = HashMap::new();
+        let links = match a.links {
+            Some(al) => {
+                for alias in al {
+                    let tmp = alias.split(":").collect::<Vec<&str>>();
+                    links.insert(tmp[0].to_string(), tmp[1].to_string());
+                }
+                links
+            }
+            None => HashMap::new(),
+        };
         Self { path: a.path, index: a.entry_point, not_found: a.not_found ,links: links, instances: instances }
     }
 
