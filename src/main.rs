@@ -96,6 +96,8 @@ fn event_loop(epfd:i32,addrs: Vec<String>,opts:Opts) {
 
 fn main() {
     let mut opts = options();
+    let addrs = opts.clone().address_combinations();
+
     match std::env::set_current_dir(opts.path.clone()) {
         Ok(_) => (), 
         Err(e) => {
@@ -104,17 +106,13 @@ fn main() {
         },
     }
 
-    // println!("Répertoire actuel: {:?}", std::env::current_dir().unwrap());
-    let addrs = opts.clone().address_combinations();
-
-    // let mut links = HashMap::new();
     let files_paths = files::parse_dir(".");
     let paths: Vec<_> = files_paths
         .iter()
         .filter_map(|fp| fp.strip_prefix(".").map(|s| s.to_string()))
         .collect();
     let files_paths = files_paths.iter().map(|f| f.strip_prefix("./").unwrap_or(f).to_string()).collect::<Vec<String>>();
-    
+
     for (path,file_path) in paths.iter().zip(files_paths) {
         if opts.links.values().any(|v| v.contains(&file_path)) {
             continue;
