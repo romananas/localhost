@@ -21,6 +21,12 @@ localhost --config="exemple.toml"
 
 for config exemple see the server/config.toml exemple file
 
+## TODO
+
+- [ ] implement POST request (wip)
+- [ ] implement DELETE request
+- [ ] implement PUT requests
+- [ ] implement config for download and upload folders
 
 ## License
 
