@@ -42,6 +42,7 @@ fn get_listeners(epfd:i32, addrs: Vec<String>) -> HashMap<i32,TcpListener> {
         let mut listeners: HashMap<i32, TcpListener> = HashMap::new();
         for addr in &addrs {
             let listener = TcpListener::bind(addr).unwrap();
+            // println!("Serveur en écoute sur {}", addr);
             listener.set_nonblocking(true).unwrap();
             let listener_fd = listener.as_raw_fd();
     
@@ -64,16 +65,16 @@ fn get_listeners(epfd:i32, addrs: Vec<String>) -> HashMap<i32,TcpListener> {
 
 fn event_loop(epfd:i32,addrs: Vec<String>,opts:Opts) {
     let mut events: [epoll_event; 10] = unsafe { mem::zeroed() };
+    // Bind to each address and add the listener to epoll
+    let mut listeners = get_listeners(epfd, addrs.clone());
     loop {
         println!("Waiting for events...");
 
         let nfds = unsafe { epoll_wait(epfd, events.as_mut_ptr(), events.len() as i32, -1) };
+        // dbg!(nfds);
         if nfds == -1 {
             panic!("Error with epoll_wait");
         }
-
-        // Bind to each address and add the listener to epoll
-        let mut listeners = get_listeners(epfd, addrs.clone());
 
         for i in 0..nfds as usize {
             let event_fd = events[i].u64 as RawFd;
