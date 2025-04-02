@@ -12,15 +12,16 @@ mod options;
 mod config;
 mod files;
 mod utils;
+mod interface;
 
 use options::Opts;
 
-// fn set_nonblocking(fd: RawFd) {
-//     unsafe {
-//         let flags = libc::fcntl(fd, libc::F_GETFL, 0);
-//         libc::fcntl(fd, libc::F_SETFL, flags | libc::O_NONBLOCK);
-//     }
-// }
+fn set_nonblocking(fd: RawFd) {
+    unsafe {
+        let flags = libc::fcntl(fd, libc::F_GETFL, 0);
+        libc::fcntl(fd, libc::F_SETFL, flags | libc::O_NONBLOCK);
+    }
+}
 
 /// Parse all options when using arguments or config file
 fn options() -> options::Opts {
@@ -78,6 +79,7 @@ fn event_loop(epfd:i32,addrs: Vec<String>,opts:Opts) {
 
         for i in 0..nfds as usize {
             let event_fd = events[i].u64 as RawFd;
+            set_nonblocking(event_fd);
 
             // Check if this event is from a listener
             if listeners.contains_key(&event_fd) {
