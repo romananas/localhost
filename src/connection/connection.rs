@@ -1,8 +1,8 @@
 use std::fs;
-use std::io::{BufRead, BufReader, Read, Write};
+use std::io::{BufReader, Read, Write};
 use std::net::TcpStream;
 
-use crate::options;
+use crate::{interface, options, utils};
 use super::{requests, utils::*};
 
 pub fn handle(mut stream: TcpStream, opts: options::Opts) {
@@ -29,11 +29,29 @@ pub fn handle(mut stream: TcpStream, opts: options::Opts) {
 fn handle_get(path: &str, opts: &options::Opts, stream: &mut TcpStream) {
     let response = get_file(path, opts);
     let status_line = get_status_line(response.status);
-    let content_type = get_content_type(&response.file);
+    let mut content_type = get_content_type(&response.file);
 
-    let contents = fs::read_to_string(&response.file).unwrap_or_else(|_| {
+    let mut contents = fs::read_to_string(&response.file).unwrap_or_else(|_| {
         String::from("<h1>500 INTERNAL SERVER ERROR</h1>")
     });
+
+    let ext = match utils::get_file_extention(path) {
+        Some(v) => v,
+        None => "",
+    };
+
+    // call the cgi if needded
+    if !ext.is_empty() && opts.cgi_binds.contains_key(ext) {
+        let cmd = opts.cgi_binds.get(ext).unwrap();
+        contents = match interface::exec(String::from(path.strip_prefix("/").unwrap()), cmd.clone(), String::from("")) {
+            Ok(v) => v,
+            Err(e) => {
+                println!("{}",e);
+                String::from("<h1>500 INTERNAL SERVER ERROR</h1>")
+            }
+        };
+        content_type = "text/html"
+    }
 
     send_response(stream, &status_line, &content_type, &contents);
 }
