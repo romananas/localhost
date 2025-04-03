@@ -10,7 +10,7 @@ not_found = "404.html" # define the 404 file not found file
 aliases = {"hello.html" = "/world"} # create aliases (file : path) if empty will use the file name for path (hello.html = hello)
 
 [cgi]
-bindings = {"py" = "python3","js" = "node"}
+bindings = {"py" = "python3","js" = "node", "php" = "php"}
 
 # Creating an instance
 [[servers.instance]]
