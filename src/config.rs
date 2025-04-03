@@ -7,6 +7,7 @@ use toml::{map::Map, Value};
 pub struct Config {
     pub path: String,
     pub servers: ServerConfig,
+    pub cgi: CommonGatewayInterface,
 }
 
 #[derive(Deserialize, Debug)]
@@ -15,6 +16,11 @@ pub struct ServerConfig {
     pub not_found: String,
     pub instance: Vec<Server>, // On stocke les serveurs dans un Vec
     pub aliases: Option<Map<String,Value>>
+}
+
+#[derive(Deserialize,Debug)]
+pub struct CommonGatewayInterface {
+    pub bindings: Option<Map<String,Value>>,
 }
 
 #[derive(Deserialize, Debug)]
