@@ -1,42 +1,47 @@
-use std::process::Command;
+use std::{fmt::Display, process::Command};
 
-pub enum Method {
-    GET,
-    POST,
-    DELETE,
+pub enum ErrorStatus {
+    Execution,
+    Program,
+    ByteConversion
 }
 
-#[derive(Debug,PartialEq, Eq)]
-pub enum Lang {
-    Python,
-    Php,
-    Unknown
+pub struct Error {
+    status: ErrorStatus,
+    message: String,
 }
 
-pub fn get_lang(file: String) -> Lang {
-    let ext = match file.split(".").last() {
-        Some(v) => v,
-        None => return Lang::Unknown,
-    };
-    match ext {
-        "py" => Lang::Python,
-        "php" => Lang::Php,
-        _ => Lang::Unknown
+impl Error {
+    fn new(status: ErrorStatus,message: String) -> Self {
+        Self { status, message}
     }
 }
 
-pub fn exec(path: String,m: Method,c: String,lang: Option<Lang>) -> String {
-    let lang = match lang {
-        Some(v) => v,
-        None =>{
-            get_lang(path.clone())
-        }
+impl Display for Error {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let status = match self.status {
+            ErrorStatus::Execution => "can't execute the program",
+            ErrorStatus::ByteConversion => "the program has been succesfully executed but can't convert the result into a string",
+            ErrorStatus::Program => "the program returned an error",
+        };
+        write!(f,"{} : {}",status,self.message)
+    }
+}
+
+pub fn exec(path: String,command: String,args: String) -> Result<String,Error> {
+    let output = match Command::new(command).arg(path).arg(args).output() {
+        Ok(output) => output,
+        Err(e) => return Err(Error::new(ErrorStatus::Execution, format!("{}",e))),
     };
-    let output = match lang {
-        Lang::Python => Command::new("python3").arg(path).output().expect("failed to execute process"),
-        _ => return String::from("unkown"),
-    };
-    let v = String::from_utf8(output.stdout).unwrap();
-    println!("le script a dit: \"{}\"",v);
-    v
+    if output.status.success() {
+        match String::from_utf8(output.stdout) {
+            Ok(s) => return Ok(s),
+            Err(e) => return Err(Error::new(ErrorStatus::ByteConversion, format!("{}",e))),
+        };
+    } else {
+        match String::from_utf8(output.stderr) {
+            Ok(s) => return Err(Error::new(ErrorStatus::Program, s)),
+            Err(e) => return Err(Error::new(ErrorStatus::ByteConversion, format!("{}",e))),
+        };
+    }
 }
