@@ -43,7 +43,11 @@ fn handle_get(path: &str, opts: &options::Opts, stream: &mut TcpStream) {
     // call the cgi if needded
     if !ext.is_empty() && opts.cgi_binds.contains_key(ext) {
         let cmd = opts.cgi_binds.get(ext).unwrap();
-        contents = match interface::exec(String::from(path.strip_prefix("/").unwrap()), cmd.clone(), String::from("")) {
+        let (path,args) = match utils::split_get_request(path) {
+            Some(v) => v,
+            None => (path,""),
+        };
+        contents = match interface::exec(String::from(path.strip_prefix("/").unwrap()), cmd.clone(), String::from(args)) {
             Ok(v) => v,
             Err(e) => {
                 println!("{}",e);
@@ -59,6 +63,10 @@ fn handle_get(path: &str, opts: &options::Opts, stream: &mut TcpStream) {
 fn handle_post(path: &str, opts: &options::Opts, request: Vec<String>, mut buf_reader: BufReader<TcpStream>, mut stream: TcpStream) {
     //* Récupérer `Content-Length`
     let mut content_length = 0;
+
+    let response = get_file(path, opts);
+    let status_line = get_status_line(response.status);
+    let mut content_type = get_content_type(&response.file);
     
     // Parcourt les lignes de l'en-tête de la requête HTTP pour trouver `Content-Length`
     for line in &request {
@@ -67,9 +75,7 @@ fn handle_post(path: &str, opts: &options::Opts, request: Vec<String>, mut buf_r
             content_length = line.split_whitespace().nth(1).unwrap_or("0").parse::<usize>().unwrap_or(0);
         }
     }
-
-    println!("Content-Length trouvé: {}", content_length);
-
+    
     // Initialise un vecteur de bytes pour stocker le corps de la requête
     let mut body = vec![0; content_length];
     
@@ -79,11 +85,33 @@ fn handle_post(path: &str, opts: &options::Opts, request: Vec<String>, mut buf_r
     }
 
     // Convertit le contenu du body en String (UTF-8)
-    let body_str = String::from_utf8_lossy(&body);
-    println!("POST Body: {}", body_str);
+    let req_body = String::from_utf8(body).unwrap();
+
+    let ext = match utils::get_file_extention(path) {
+        Some(v) => v,
+        None => "",
+    };
+
+    let mut contents = fs::read_to_string(&response.file).unwrap_or_else(|_| {
+        String::from("<h1>500 INTERNAL SERVER ERROR</h1>")
+    });
+
+
+    // call the cgi if needded
+    if !ext.is_empty() && opts.cgi_binds.contains_key(ext) {
+        let cmd = opts.cgi_binds.get(ext).unwrap();
+        contents = match interface::exec(String::from(path.strip_prefix("/").unwrap()), cmd.clone(), String::from(req_body)) {
+            Ok(v) => v,
+            Err(e) => {
+                println!("{}",e);
+                String::from("<h1>500 INTERNAL SERVER ERROR</h1>")
+            }
+        };
+        content_type = "text/html"
+    }
 
     // Envoie une réponse HTTP 200 OK avec "received" comme contenu
-    send_response(&mut stream, "HTTP/1.1 200 OK", "text/plain", "received");
+    send_response(&mut stream, status_line, content_type, &contents);
 }
 
 
