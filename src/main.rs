@@ -26,15 +26,9 @@ fn set_nonblocking(fd: RawFd) {
 /// Parse all options when using arguments or config file
 fn options() -> options::Opts {
     let args = args::parse();
-    let opt = match args.config {
-        Some(p) => {
-            let content = String::from_utf8(fs::read(p).unwrap()).unwrap();
-            let cfg = config::get(&content).unwrap();
-            Opts::from_config(cfg)
-        },
-        None => Opts::from_args(args),
-    };
-    opt
+    let content = String::from_utf8(fs::read(args.config).unwrap()).unwrap();
+    let cfg = config::get(&content).unwrap();
+    Opts::from_config(cfg)
 }
 
 fn get_listeners(epfd:i32, addrs: Vec<String>) -> HashMap<i32,TcpListener> {
