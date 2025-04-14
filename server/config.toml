@@ -2,6 +2,7 @@
 
 # path to server files
 path = "./server/"
+uploads_folder = "uploads/"
 
 # global servers config
 [servers]
