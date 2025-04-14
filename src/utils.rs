@@ -44,7 +44,7 @@ pub fn split_get_request(path: &str) -> Option<(&str,&str)>{
     return Some((trimmed_path,req_msg));
 }
 
-pub fn sanatize_path(file_path: &str) -> &str {
+pub fn _sanatize_path(file_path: &str) -> &str {
     let file_path = match file_path.strip_prefix("/") {
         Some(s) => s,
         None => file_path,
