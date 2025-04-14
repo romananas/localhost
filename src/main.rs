@@ -95,6 +95,7 @@ fn main() {
     let mut opts = options();
     let addrs = opts.clone().address_combinations();
 
+    // changing working directory
     match std::env::set_current_dir(opts.path.clone()) {
         Ok(_) => (), 
         Err(e) => {
@@ -103,6 +104,7 @@ fn main() {
         },
     }
 
+    // sanaitizing files paths for later use
     let files_paths = files::parse_dir(".");
     let paths: Vec<_> = files_paths
         .iter()
