@@ -6,6 +6,7 @@ use toml::{map::Map, Value};
 #[derive(Deserialize, Debug)]
 pub struct Config {
     pub path: String,
+    pub uploads_folder: String,
     pub servers: ServerConfig,
     pub cgi: CommonGatewayInterface,
 }
