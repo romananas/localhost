@@ -1,17 +1,10 @@
 import sys
-import sqlite3
-
-def parse_query_string(query: str) -> dict:
-    result = {}
-    for pair in query.split("&"):
-        if "=" in pair:
-            key, value = pair.split("=", 1)
-            result[key] = value
-    return result
+import json
 
 print("<h1>Welcome on script.py</h1>")
-if sys.argv[1] == "" :
-    print('<form action="/script.py" method="GET">')
+
+if len(sys.argv) < 2 or sys.argv[1].strip() == "":
+    print('<form action="/script.py" method="POST" enctype="application/json">')
     print('<div>')
     print('<label for="firstname">firstname :</label>')
     print('<input name="firstname" id="firstname" placeholder="John" />')
@@ -21,9 +14,14 @@ if sys.argv[1] == "" :
     print('<input name="lastname" id="lastname" placeholder="Smith" />')
     print('</div>')
     print('<div>')
-    print('<button>Send my greetings</button>')
+    print('<button type="submit">Send my greetings</button>')
     print('</div>')
     print('</form>')
-else :
-    data = parse_query_string(sys.argv[1])
-    print("<p>Hello " + data['firstname'] + " " + data['lastname'] + "!</p>")
+else:
+    try:
+        data = json.loads(sys.argv[1])
+        firstname = data.get("firstname", "Unknown")
+        lastname = data.get("lastname", "")
+        print(f"<p>Hello {firstname} {lastname}!</p>")
+    except json.JSONDecodeError:
+        print("<p>Invalid JSON received.</p>")
