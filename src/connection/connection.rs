@@ -1,40 +1,47 @@
 use std::fs;
-use std::io::{BufReader, Read, Write};
+use std::io::{BufReader, Write};
 use std::net::TcpStream;
 
 use crate::{interface, options, utils};
-use super::{requests, utils::*};
+use super::{requests::Request, requests::RequestType, utils::*};
+
+const ERROR_500: &str = "<h1>500 INTERNAL SERVER ERROR<h1>";
 
 pub fn handle(mut stream: TcpStream, opts: options::Opts) {
     let mut reader = BufReader::new(stream.try_clone().expect("Échec de clone du stream"));
-    let request_lines: Vec<String> = requests::parse(&mut reader);
 
-    println!("{:#?}",request_lines);
+    // Parsing de la requête via la structure
+    let request = match Request::parse(&mut reader) {
+        Some(req) => req,
+        None => {
+            eprintln!("Erreur : Requête mal formée ou vide.");
+            return;
+        }
+    };
 
-    if request_lines.is_empty() {
-        return;
+    println!("{:#?}", request);
+
+    match request.rtype {
+        RequestType::GET => handle_get(&request, &opts, &mut stream),
+        RequestType::POST => handle_post(request, &opts, stream),
+        _ => send_response(
+            &mut stream,
+            "HTTP/1.1 405 METHOD NOT ALLOWED",
+            "text/plain",
+            "Method Not Allowed",
+        ),
     }
-
-    let header_line = &request_lines[0];
-    let mut parts = header_line.split_whitespace();
-
-    let method = parts.next().unwrap_or("GET");
-    let path = parts.next().unwrap_or("/");
-
-    match method {
-        "GET" => handle_get(path, &opts, &mut stream),
-        "POST" => handle_post(path, &opts, request_lines.clone(), reader, stream),
-        _ => send_response(&mut stream, "HTTP/1.1 405 METHOD NOT ALLOWED", "text/plain", "Method Not Allowed"),
-    }
+    
 }
 
-fn handle_get(path: &str, opts: &options::Opts, stream: &mut TcpStream) {
+fn handle_get(request: &Request, opts: &options::Opts, stream: &mut TcpStream) {
+    let path = &request.path;
     let response = get_file(path, opts);
     let status_line = get_status_line(response.status);
     let mut content_type = get_content_type(&response.file);
 
     let mut content = fs::read_to_string(&response.file).unwrap_or_else(|_| {
-        "<h1>500 INTERNAL SERVER ERROR</h1>".to_string()
+        ERROR_500.to_string()
     });
 
     // Exécution CGI si applicable
@@ -56,36 +63,18 @@ fn handle_get(path: &str, opts: &options::Opts, stream: &mut TcpStream) {
     send_response(stream, &status_line, content_type, &content);
 }
 
-fn handle_post(
-    path: &str,
-    opts: &options::Opts,
-    request_lines: Vec<String>,
-    mut reader: BufReader<TcpStream>,
-    mut stream: TcpStream,
-) {
-    // Récupération du Content-Length
-    let content_length = request_lines
-        .iter()
-        .find(|line| line.to_lowercase().starts_with("content-length:"))
-        .and_then(|line| line.split_whitespace().nth(1))
-        .and_then(|v| v.parse::<usize>().ok())
-        .unwrap_or(0);
 
-    // Lecture du body
-    let mut body = vec![0; content_length];
-    if content_length > 0 {
-        let _ = reader.read_exact(&mut body);
-    }
+fn handle_post(request: Request, opts: &options::Opts, mut stream: TcpStream) {
+    let path = &request.path;
 
-    let body_str = String::from_utf8_lossy(&body).to_string();
-    println!("Body POST : {}", body_str);
+    println!("Body POST : {}", request.content.data);
 
     let response = get_file(path, opts);
     let status_line = get_status_line(response.status);
     let mut content_type = get_content_type(&response.file);
 
     let mut content = fs::read_to_string(&response.file).unwrap_or_else(|_| {
-        "<h1>500 INTERNAL SERVER ERROR</h1>".to_string()
+        ERROR_500.to_string()
     });
 
     // Exécution CGI si applicable
@@ -94,10 +83,10 @@ fn handle_post(
             content = interface::exec(
                 path.trim_start_matches('/').to_string(),
                 cmd.clone(),
-                body_str,
+                request.content.data.clone(),
             ).unwrap_or_else(|e| {
                 eprintln!("Erreur CGI : {}", e);
-                "<h1>500 INTERNAL SERVER ERROR</h1>".to_string()
+                ERROR_500.to_string()
             });
             content_type = "text/html";
         }
@@ -105,6 +94,7 @@ fn handle_post(
 
     send_response(&mut stream, &status_line, content_type, &content);
 }
+
 
 fn send_response(stream: &mut TcpStream, status_line: &str, content_type: &str, body: &str) {
     let response = format!(
