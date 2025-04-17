@@ -1,5 +1,8 @@
 use std::fs::read_dir;
 use std::path::Path;
+use std::fs::File;
+use std::io::Write;
+
 
 pub fn parse_dir(dir: &str) -> Vec<String> {
     let mut list = Vec::new();
@@ -19,4 +22,18 @@ fn visit_dirs(dir: &Path, list: &mut Vec<String>) {
             }
         }
     }
+}
+
+
+
+pub fn write_file(dir: String,fname: String,data: Vec<u8>) -> Result<(), Box<dyn std::error::Error>> {
+    let mut file = match File::create(format!("{}{}",dir,fname)) {
+        Ok(file) => file,
+        Err(e) => return Err(Box::new(e)),
+    };
+    match file.write(&data) {
+        Ok(_) => {},
+        Err(e) => return Err(Box::new(e)),
+    };
+    Ok(())
 }
