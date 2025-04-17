@@ -46,11 +46,15 @@ impl Opts {
                 default
             },
         };
+        let path = match verify_dir_format(&c.path) {
+            Ok(v) => v,
+            Err(e) => return Err(e),
+        };
         let upload =  match verify_dir_format(&c.uploads_folder) {
             Ok(v) => v,
             Err(e) => return Err(e),
         };
-        Ok(Self { path: c.path, index: c.servers.index, links: links, not_found: c.servers.not_found, instances: instances, cgi_binds: cgi_binds, upload })
+        Ok(Self { path, index: c.servers.index, links: links, not_found: c.servers.not_found, instances: instances, cgi_binds: cgi_binds, upload })
     }
 
     /// Generate every addresses/port combinations for every instances
