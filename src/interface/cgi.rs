@@ -1,4 +1,6 @@
 use std::{fmt::Display, process::Command};
+use crate::utils;
+use crate::options;
 
 pub enum ErrorStatus {
     Execution,
@@ -44,4 +46,19 @@ pub fn exec(path: String,command: String,args: String) -> Result<String,Error> {
             Err(e) => return Err(Error::new(ErrorStatus::ByteConversion, format!("{}",e))),
         };
     }
+}
+
+pub fn launch(path: &str,opts: &options::Opts,data: String) -> Result<String,Error> {
+     // Exécution CGI si applicable
+     let mut content = String::new();
+     if let Some(ext) = utils::get_file_extention(path) {
+        if let Some(cmd) = opts.cgi_binds.get(ext) {
+            content = exec(
+                path.trim_start_matches('/').to_string(),
+                cmd.clone(),
+                data,
+            )?;
+        }
+    }
+    return Ok(content);
 }
