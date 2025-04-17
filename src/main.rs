@@ -28,7 +28,13 @@ fn options() -> options::Opts {
     let args = args::parse();
     let content = String::from_utf8(fs::read(args.config).unwrap()).unwrap();
     let cfg = config::get(&content).unwrap();
-    Opts::from_config(cfg)
+    match Opts::from_config(cfg) {
+        Ok(opts) => opts,
+        Err(e) => {
+            eprintln!("config error : {}",e);
+            std::process::exit(1);
+        },
+    }
 }
 
 fn get_listeners(epfd:i32, addrs: Vec<String>) -> HashMap<i32,TcpListener> {
