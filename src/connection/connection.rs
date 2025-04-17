@@ -2,7 +2,8 @@ use std::fs;
 use std::io::{BufReader, Write};
 use std::net::TcpStream;
 
-use crate::{interface, options, utils};
+use crate::connection::multipart;
+use crate::{interface, options, utils,files};
 use super::{requests::Request, requests::RequestType, utils::*};
 
 const ERROR_500: &str = "<h1>500 INTERNAL SERVER ERROR<h1>";
@@ -19,7 +20,7 @@ pub fn handle(mut stream: TcpStream, opts: options::Opts) {
         }
     };
 
-    println!("{:#?}", request);
+    // println!("{:#?}", request);
 
     match request.rtype {
         RequestType::GET => handle_get(&request, &opts, &mut stream),
@@ -53,8 +54,8 @@ fn handle_get(request: &Request, opts: &options::Opts, stream: &mut TcpStream) {
                 cmd.clone(),
                 args.to_string(),
             ).unwrap_or_else(|e| {
-                eprintln!("Erreur CGI : {}", e);
-                "<h1>500 INTERNAL SERVER ERROR</h1>".to_string()
+                eprintln!("CGI ERROR ON GET : {}", e);
+                ERROR_500.to_string()
             });
             content_type = "text/html";
         }
@@ -67,30 +68,45 @@ fn handle_get(request: &Request, opts: &options::Opts, stream: &mut TcpStream) {
 fn handle_post(request: Request, opts: &options::Opts, mut stream: TcpStream) {
     let path = &request.path;
 
-    println!("Body POST : {}", request.content.data);
-
     let response = get_file(path, opts);
     let status_line = get_status_line(response.status);
-    let mut content_type = get_content_type(&response.file);
+    let mut content_type = request.content._type.as_str();
+
+    let data = request.content.data.clone();
 
     let mut content = fs::read_to_string(&response.file).unwrap_or_else(|_| {
         ERROR_500.to_string()
     });
 
+    
+    match content_type.trim() {
+        "multipart/form-data" => {
+            let datas = multipart::parse(data.clone().as_slice());
+            println!("{:#?}",datas);
+            for data in datas {
+                match data._type {
+                    multipart::Type::File(filename) => {
+                        match files::write_file(opts.upload.clone(), filename, data.content) {
+                            Ok(_) => {},
+                            Err(e) => eprint!("{}",e) 
+                        };
+                    },
+                    multipart::Type::Value => {},
+                }
+            }
+        },
+        _ => {},
+    };
+    
     // Exécution CGI si applicable
-    if let Some(ext) = utils::get_file_extention(path) {
-        if let Some(cmd) = opts.cgi_binds.get(ext) {
-            content = interface::exec(
-                path.trim_start_matches('/').to_string(),
-                cmd.clone(),
-                request.content.data.clone(),
-            ).unwrap_or_else(|e| {
-                eprintln!("Erreur CGI : {}", e);
-                ERROR_500.to_string()
-            });
+    let content = match interface::launch(path, opts, String::from("Jello")) {
+        Ok(s) => s,
+        Err(e) => {
+            eprintln!("error : {}",e);
             content_type = "text/html";
-        }
-    }
+            String::from("cgi error")
+        },
+    };
 
     send_response(&mut stream, &status_line, content_type, &content);
 }
