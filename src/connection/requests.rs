@@ -1,5 +1,6 @@
 use std::io::{BufRead, BufReader};
 use std::net::TcpStream;
+use std::io::Read;
 use super::content::Content;
 
 #[derive(Debug,Clone, Copy,PartialEq, Eq)]
@@ -21,9 +22,6 @@ pub struct Request {
     pub accept: String,
     pub content: Content,
 }
-
-
-use std::io::Read; // n'oublie pas ça en haut
 
 impl Request {
     pub fn parse(reader: &mut BufReader<TcpStream>) -> Option<Self> {
@@ -52,7 +50,10 @@ impl Request {
             } else if let Some(value) = line.strip_prefix("Accept:") {
                 accept = value.trim().to_string();
             } else if let Some(value) = line.strip_prefix("Content-Type:") {
-                content_type = value.trim().to_string();
+                content_type = match value.trim().split_once(";") {
+                    Some((v,_)) => v.to_string(),
+                    None => value.to_string(),
+                };
             } else if let Some(value) = line.strip_prefix("Content-Length:") {
                 content_length = value.trim().parse().unwrap_or(0);
             }
@@ -64,7 +65,7 @@ impl Request {
             return None;
         }
 
-        let body = String::from_utf8_lossy(&buffer).to_string();
+        let body = buffer;
 
         // Start-line : méthode, path, version
         let (rtype, path, version) = match start_line.split_whitespace().collect::<Vec<&str>>().as_slice() {
