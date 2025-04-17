@@ -1,8 +1,7 @@
 #![allow(dead_code)]
 use toml::Value;
-
+use std::path::Path;
 use super::config::Config;
-
 use std::collections::HashMap;
 
 fn map_to_hashmap(map: toml::map::Map<String,Value>) -> HashMap<String,String>{
@@ -29,7 +28,7 @@ pub struct Opts {
 }
 
 impl Opts {
-    pub fn from_config(c: Config) -> Self {
+    pub fn from_config(c: Config) -> Result<Self,String> {
         let mut instances: HashMap<String,Vec<u32>> = HashMap::new();
         for s in c.servers.instance {
             instances.insert(s.address, s.ports);
@@ -47,7 +46,11 @@ impl Opts {
                 default
             },
         };
-        Self { path: c.path, index: c.servers.index, links: links, not_found: c.servers.not_found, instances: instances, cgi_binds: cgi_binds, upload: c.uploads_folder }
+        let upload =  match verify_dir_format(&c.uploads_folder) {
+            Ok(v) => v,
+            Err(e) => return Err(e),
+        };
+        Ok(Self { path: c.path, index: c.servers.index, links: links, not_found: c.servers.not_found, instances: instances, cgi_binds: cgi_binds, upload })
     }
 
     /// Generate every addresses/port combinations for every instances
@@ -56,5 +59,19 @@ impl Opts {
         instances.iter().flat_map(|(addr,ports)| {
             ports.iter().map(|p| {format!("{}:{}",addr,p)}).collect::<Vec<String>>()
         }).collect::<Vec<String>>()
+    }
+}
+
+fn verify_dir_format(dir: &str) -> Result<String, String>{
+    if !Path::new(dir).exists() {
+        return Err(format!("{} is does not exist",dir));
+    }
+    if !Path::new(dir).is_dir() {
+        return Err(format!("{} is not a directory",dir));
+    }
+    if !dir.ends_with("/") {
+        return Ok(format!("{}/",dir));
+    } else {
+        return Ok(String::from(dir));
     }
 }
