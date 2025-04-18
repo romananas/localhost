@@ -6,7 +6,7 @@ use uuid;
 
 use serde_json;
 
-use crate::connection::{content, multipart};
+use crate::connection::multipart;
 use crate::utils::get_file_extention;
 use crate::{interface, options, utils, files};
 use super::{requests::Request, requests::RequestType, utils::*};
