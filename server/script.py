@@ -1,27 +1,70 @@
 import sys
 import json
 
-print("<h1>Welcome on script.py</h1>")
+html_template = """
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Profile</title>
+    <style>
+        body {{
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            padding: 20px;
+            color: #333;
+        }}
+        .container {{
+            max-width: 400px;
+            margin: auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            text-align: center;
+        }}
+        img {{
+            border-radius: 50%;
+            max-width: 150px;
+            height: auto;
+            margin-bottom: 15px;
+        }}
+        h1 {{
+            color: #2c3e50;
+        }}
+    </style>
+</head>
+<body>
+    <div class="container">
+        {content}
+    </div>
+</body>
+</html>
+"""
 
+def render_content(firstname, lastname, avatar_url):
+    return f"""
+    <h1>Bienvenue {firstname} {lastname}!</h1>
+    <img src="{avatar_url}" alt="Avatar de {firstname}">
+    """
+
+def render_error(msg):
+    return f"<h1>Erreur :</h1><p>{msg}</p>"
+
+# Logique principale
 if len(sys.argv) < 2 or sys.argv[1].strip() == "":
-    print('<form action="/script.py" method="POST" enctype="application/json">')
-    print('<div>')
-    print('<label for="firstname">firstname :</label>')
-    print('<input name="firstname" id="firstname" placeholder="John" />')
-    print('</div>')
-    print('<div>')
-    print('<label for="lastname">lastname : </label>')
-    print('<input name="lastname" id="lastname" placeholder="Smith" />')
-    print('</div>')
-    print('<div>')
-    print('<button type="submit">Send my greetings</button>')
-    print('</div>')
-    print('</form>')
+    content = render_error("Données non reçues")
 else:
     try:
         data = json.loads(sys.argv[1])
-        firstname = data.get("firstname", "Unknown")
+        firstname = data.get("firstname", "Inconnu")
         lastname = data.get("lastname", "")
-        print(f"<p>Hello {firstname} {lastname}!</p>")
+        avatar = data.get("avatar", "")
+        if avatar:
+            content = render_content(firstname, lastname, avatar)
+        else:
+            content = render_content(firstname, lastname, "https://via.placeholder.com/150")
     except json.JSONDecodeError:
-        print("<p>Invalid JSON received.</p>")
+        content = render_error("JSON invalide")
+
+print(html_template.format(content=content))

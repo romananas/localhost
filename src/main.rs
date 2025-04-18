@@ -64,7 +64,7 @@ fn get_listeners(epfd:i32, addrs: Vec<String>) -> HashMap<i32,TcpListener> {
         listeners
 }
 
-fn event_loop(epfd:i32,addrs: Vec<String>,opts:Opts) {
+fn event_loop(epfd:i32,addrs: Vec<String>,opts: &mut Opts) {
     let mut events: [epoll_event; 10] = unsafe { mem::zeroed() };
     // Bind to each address and add the listener to epoll
     let mut listeners = get_listeners(epfd, addrs.clone());
@@ -78,6 +78,7 @@ fn event_loop(epfd:i32,addrs: Vec<String>,opts:Opts) {
         }
 
         for i in 0..nfds as usize {
+            opts.links = files::parse_files(opts.index.clone());
             let event_fd = events[i].u64 as RawFd;
             set_nonblocking(event_fd);
 
@@ -101,34 +102,9 @@ fn main() {
     let mut opts = options();
     let addrs = opts.clone().address_combinations();
 
-    // changing working directory
-    match std::env::set_current_dir(opts.path.clone()) {
-        Ok(_) => (), 
-        Err(e) => {
-            println!("{}",e);
-            return;
-        },
-    }
-
     // sanaitizing files paths for later use
-    let files_paths = files::parse_dir(".");
-    let paths: Vec<_> = files_paths
-        .iter()
-        .filter_map(|fp| fp.strip_prefix(".").map(|s| s.to_string()))
-        .collect();
-    let files_paths = files_paths.iter().map(|f| f.strip_prefix("./").unwrap_or(f).to_string()).collect::<Vec<String>>();
-
-    for (path,file_path) in paths.iter().zip(files_paths) {
-        if opts.links.values().any(|v| v.contains(&file_path)) {
-            continue;
-        }
-        if file_path.contains(opts.index.as_str()) {
-            opts.links.insert("/".to_string(), file_path);
-            continue;
-        }
-        let tmp = utils::remove_extension(&path);
-        opts.links.insert(tmp.to_string().clone(), file_path.clone());
-    }
+    opts.links = files::parse_files(opts.index.clone());
+    // println!("{:#?}",opts.links);
 
     // Create the epoll instance
     let epfd = unsafe { epoll_create1(0) };
@@ -137,6 +113,6 @@ fn main() {
     }
 
     // Handle events with epoll
-    event_loop(epfd, addrs, opts);
+    event_loop(epfd, addrs, &mut opts);
 
 }

@@ -48,6 +48,6 @@ pub fn get_content_type(file_path: &str) -> &str {
         "gif" => "image/gif",
         "svg" => "image/svg+xml",
         "ico" => "image/x-icon",
-        _ => "text/plain",
+        _ => "text/html",
     }
 }

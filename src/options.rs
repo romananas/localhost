@@ -1,7 +1,9 @@
 #![allow(dead_code)]
 use toml::Value;
-use std::path::Path;
+
 use super::config::Config;
+
+use std::path::Path;
 use std::collections::HashMap;
 
 fn map_to_hashmap(map: toml::map::Map<String,Value>) -> HashMap<String,String>{
@@ -50,6 +52,13 @@ impl Opts {
             Ok(v) => v,
             Err(e) => return Err(e),
         };
+            // changing working directory
+        match std::env::set_current_dir(path.clone()) {
+            Ok(_) => (), 
+            Err(e) => {
+                return Err(format!("{}",e));
+            },
+        }
         let upload =  match verify_dir_format(&c.uploads_folder) {
             Ok(v) => v,
             Err(e) => return Err(e),
