@@ -59,7 +59,7 @@ impl Opts {
                 return Err(format!("{}",e));
             },
         }
-        let upload =  match verify_dir_format(&c.uploads_folder) {
+        let upload =  match verify_dir_format(&c.uploads) {
             Ok(v) => v,
             Err(e) => return Err(e),
         };

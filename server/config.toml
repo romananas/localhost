@@ -1,8 +1,8 @@
 # Config exemple
 
 # path to server files
-path = "./server/"
-uploads_folder = "uploads/"
+path = "server/"
+uploads = "uploads/"
 
 # global servers config
 [servers]
