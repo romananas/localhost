@@ -38,7 +38,6 @@ fn options() -> options::Opts {
 }
 
 fn get_listeners(epfd:i32, addrs: Vec<String>) -> HashMap<i32,TcpListener> {
-    
         // HashMap to keep track of listeners and clients
         let mut listeners: HashMap<i32, TcpListener> = HashMap::new();
         for addr in &addrs {
