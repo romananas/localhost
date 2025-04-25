@@ -1,5 +1,4 @@
 #[derive(Debug,Clone)]
-#[allow(dead_code)]
 pub struct Content {
     pub _type: String,
     pub lenght: u32,

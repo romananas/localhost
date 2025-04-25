@@ -6,7 +6,6 @@ use std::fs;
 use libc::{epoll_create1, epoll_ctl, epoll_event, epoll_wait, EPOLLIN, EPOLL_CTL_ADD};
 
 mod connection;
-mod ip;
 mod args;
 mod options;
 mod config;

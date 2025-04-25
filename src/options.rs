@@ -1,4 +1,3 @@
-#![allow(dead_code)]
 use toml::Value;
 
 use super::config::Config;

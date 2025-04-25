@@ -12,7 +12,6 @@ pub enum RequestType {
 }
 
 #[derive(Debug,Clone)]
-#[allow(dead_code)]
 pub struct Request {
     pub rtype: RequestType,
     pub path: String,
