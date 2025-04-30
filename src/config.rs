@@ -3,7 +3,7 @@
 use serde_derive::Deserialize;
 use toml::{map::Map, Value};
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, Clone)]
 pub struct Config {
     pub path: String,
     pub uploads: String,
@@ -11,7 +11,7 @@ pub struct Config {
     pub cgi: CommonGatewayInterface,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, Clone)]
 pub struct ServerConfig {
     pub index: String,
     pub not_found: String,
@@ -19,14 +19,15 @@ pub struct ServerConfig {
     pub aliases: Option<Map<String,Value>>
 }
 
-#[derive(Deserialize,Debug)]
+#[derive(Deserialize,Debug,Clone)]
 pub struct CommonGatewayInterface {
     pub bindings: Option<Map<String,Value>>,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug,Clone)]
 pub struct Server {
     pub address: String,
+    pub hosts: Option<Vec<String>>,
     pub ports: Vec<u32>,
 }
 
