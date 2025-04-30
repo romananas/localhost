@@ -26,13 +26,14 @@ pub struct Opts {
     pub links: HashMap<String, String>,
     pub instances: HashMap<String,Vec<u32>>,
     pub cgi_binds: HashMap<String,String>,
+    pub hosts: HashMap<String,String>,
 }
 
 impl Opts {
     pub fn from_config(c: Config) -> Result<Self,String> {
         let mut instances: HashMap<String,Vec<u32>> = HashMap::new();
-        for s in c.servers.instance {
-            instances.insert(s.address, s.ports);
+        for s in &c.servers.instance {
+            instances.insert(s.address.clone(), s.ports.clone());
         }
         // println!("x = {}",c.servers.aliases);
         let links = match c.servers.aliases.clone() {
@@ -62,7 +63,19 @@ impl Opts {
             Ok(v) => v,
             Err(e) => return Err(e),
         };
-        Ok(Self { path, index: c.servers.index, links: links, not_found: c.servers.not_found, instances: instances, cgi_binds: cgi_binds, upload })
+        let mut hosts: HashMap<String,String> = HashMap::new();
+        for instance in &c.servers.instance {
+            if let Some(hosts_list) = &instance.hosts {
+                for domain in hosts_list {
+                    if hosts.contains_key(domain) {
+                        return Err(format!("the hostname '{}' has been entered twice", domain));
+                    } else {
+                        hosts.insert(domain.to_string(), instance.address.clone());
+                    }
+                }
+            }
+        }
+        Ok(Self { path, index: c.servers.index, links: links, not_found: c.servers.not_found, instances: instances, cgi_binds: cgi_binds, upload, hosts})
     }
 
     /// Generate every addresses/port combinations for every instances
