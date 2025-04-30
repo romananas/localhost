@@ -16,8 +16,10 @@ bindings = {"py" = "python3","js" = "node", "php" = "php"}
 # Creating an instance
 [[servers.instance]]
 address = "127.0.0.1" # define the instance ip address
+hosts = ["localhost1,localhost2"]
 ports = [8080,8081,8082] # define the instance listening port
 
 [[servers.instance]]
 address = "127.0.0.2"
+hosts = ["localhost3"]
 ports = [8082,8083]
