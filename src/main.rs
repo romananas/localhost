@@ -13,6 +13,8 @@ mod files;
 mod utils;
 mod interface;
 
+mod hosts;
+
 use options::Opts;
 
 fn set_nonblocking(fd: RawFd) {
@@ -97,7 +99,15 @@ fn event_loop(epfd:i32,addrs: Vec<String>,opts: &mut Opts) {
 }
 
 fn main() {
+    let is_sudo = unsafe {libc::geteuid()} == 0;
     let mut opts = options();
+    if !is_sudo && !opts.hosts.is_empty() {
+        panic!("you must in sudo to add an hostname\n please execute the programm in sudo or delete all hosts line in the config file",)
+    }
+    // let map = hosts::parse().unwrap();
+    // println!("{:#?}",map);
+
+    // return;
     let addrs = opts.clone().address_combinations();
 
     // sanaitizing files paths for later use
