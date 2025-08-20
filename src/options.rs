@@ -19,7 +19,7 @@ fn map_to_hashmap(map: toml::map::Map<String,Value>) -> HashMap<String,String>{
 
 #[derive(Debug,Clone)]
 pub struct Opts {
-    pub path: String,
+    pub _path: String,
     pub upload: String,
     pub index: String,
     pub not_found: String,
@@ -75,7 +75,7 @@ impl Opts {
                 }
             }
         }
-        Ok(Self { path, index: c.servers.index, links: links, not_found: c.servers.not_found, instances: instances, cgi_binds: cgi_binds, upload, hosts})
+        Ok(Self { _path: path, index: c.servers.index, links: links, not_found: c.servers.not_found, instances: instances, cgi_binds: cgi_binds, upload, hosts})
     }
 
     /// Generate every addresses/port combinations for every instances

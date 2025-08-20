@@ -81,7 +81,6 @@ impl Request {
         };
 
         let content = Content::new(content_type, content_length, body);
-
         Some(Self {
             rtype,
             path,

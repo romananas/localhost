@@ -24,13 +24,15 @@ fn set_nonblocking(fd: RawFd) {
     }
 }
 
+type Error = Box<dyn std::error::Error>;
+
 /// Parse all options when using arguments or config file
-fn options() -> options::Opts {
+fn options() -> Result<options::Opts,Error> {
     let args = args::parse();
-    let content = String::from_utf8(fs::read(args.config).unwrap()).unwrap();
-    let cfg = config::get(&content).unwrap();
+    let content = String::from_utf8(fs::read(args.config)?)?;
+    let cfg = config::get(&content)?;
     match Opts::from_config(cfg) {
-        Ok(opts) => opts,
+        Ok(opts) => Ok(opts),
         Err(e) => {
             eprintln!("config error : {}",e);
             std::process::exit(1);
@@ -38,13 +40,13 @@ fn options() -> options::Opts {
     }
 }
 
-fn get_listeners(epfd:i32, addrs: Vec<String>) -> HashMap<i32,TcpListener> {
+fn get_listeners(epfd:i32, addrs: Vec<String>) -> Result<HashMap<i32,TcpListener>,Error> {
         // HashMap to keep track of listeners and clients
         let mut listeners: HashMap<i32, TcpListener> = HashMap::new();
         for addr in &addrs {
-            let listener = TcpListener::bind(addr).unwrap();
+            let listener = TcpListener::bind(addr)?;
             // println!("Serveur en écoute sur {}", addr);
-            listener.set_nonblocking(true).unwrap();
+            listener.set_nonblocking(true)?;
             let listener_fd = listener.as_raw_fd();
     
             // Add listener to epoll
@@ -61,13 +63,13 @@ fn get_listeners(epfd:i32, addrs: Vec<String>) -> HashMap<i32,TcpListener> {
             listeners.insert(listener_fd, listener);
         }
 
-        listeners
+        Ok(listeners)
 }
 
-fn event_loop(epfd:i32,addrs: Vec<String>,opts: &mut Opts) {
+fn event_loop(epfd:i32,addrs: Vec<String>,opts: &mut Opts) -> Result<(),Error>{
     let mut events: [epoll_event; 10] = unsafe { mem::zeroed() };
     // Bind to each address and add the listener to epoll
-    let mut listeners = get_listeners(epfd, addrs.clone());
+    let mut listeners = get_listeners(epfd, addrs.clone())?;
     loop {
         println!("Waiting for events...");
 
@@ -98,9 +100,9 @@ fn event_loop(epfd:i32,addrs: Vec<String>,opts: &mut Opts) {
     }
 }
 
-fn main() {
+fn main() -> Result<(),Error> {
     let is_sudo = unsafe {libc::geteuid()} == 0;
-    let mut opts = options();
+    let mut opts = options()?;
     if !is_sudo && !opts.hosts.is_empty() {
         panic!("you must in sudo to add an hostname\n please execute the programm in sudo or delete all hosts line in the config file",)
     }
@@ -121,6 +123,7 @@ fn main() {
     }
 
     // Handle events with epoll
-    event_loop(epfd, addrs, &mut opts);
+    event_loop(epfd, addrs, &mut opts)?;
+    Ok(())
 
 }
